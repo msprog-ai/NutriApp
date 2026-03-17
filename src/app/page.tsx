@@ -1,10 +1,12 @@
+
 "use client";
 
 import { useEffect } from 'react';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { InventoryItemCard } from '@/components/nutrifridge/inventory-item-card';
 import { Button } from '@/components/ui/button';
-import { Plus, Flame, Heart, ArrowRight, Loader2, ShoppingBag, LogIn } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Plus, Flame, Heart, ArrowRight, Loader2, ShoppingBag, LogIn, ChevronRight, ChefHat, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -40,27 +42,28 @@ export default function Home() {
 
   if (isUserLoading || isProfileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  // Handle landing state for brand new users
   if (!profile && !user?.isAnonymous) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-6 bg-white">
-        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-          <Flame className="w-12 h-12 text-primary" />
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center gap-8 bg-white">
+        <div className="w-28 h-28 bg-primary/10 rounded-[2.5rem] flex items-center justify-center shadow-inner">
+          <ChefHat className="w-14 h-14 text-primary" />
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">NutriFridge AI</h1>
-          <p className="text-muted-foreground mt-2">Personalized nutrition and smart inventory management.</p>
+        <div className="space-y-3">
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">NutriFridge AI</h1>
+          <p className="text-muted-foreground text-lg px-4 leading-relaxed">Personalized nutrition, smart inventory management, and AI-powered cooking.</p>
         </div>
-        <div className="w-full space-y-3">
-          <Button size="lg" className="w-full rounded-2xl py-6 text-lg font-bold" asChild>
+        <div className="w-full space-y-4 pt-4">
+          <Button size="lg" className="w-full rounded-2xl h-16 text-xl font-bold shadow-xl ios-tap-active" asChild>
             <Link href="/onboarding">Get Started</Link>
           </Button>
-          <Button size="lg" variant="outline" className="w-full rounded-2xl py-6 text-lg font-bold border-2" asChild>
+          <Button size="lg" variant="outline" className="w-full rounded-2xl h-16 text-xl font-bold border-2 ios-tap-active" asChild>
             <Link href="/auth">Sign In</Link>
           </Button>
         </div>
@@ -73,92 +76,94 @@ export default function Home() {
       const days = differenceInDays(parseISO(item.expirationDate), new Date());
       return days >= 0 && days <= 3;
     })
+    .sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime())
     .slice(0, 3);
 
   const inventorySummary = {
     total: inventory?.length || 0,
-    fridge: inventory?.filter(i => i.location === 'fridge').length || 0,
-    freezer: inventory?.filter(i => i.location === 'freezer').length || 0,
-    pantry: inventory?.filter(i => i.location === 'pantry').length || 0,
+    expiring: expiringSoon.length,
   };
 
   return (
-    <div className="pb-24 pt-8 px-6 max-w-md mx-auto min-h-screen">
+    <div className="pb-28 pt-8 px-6 max-w-md mx-auto min-h-screen bg-muted/20">
       <header className="flex justify-between items-center mb-8">
         <div>
-          <p className="text-muted-foreground text-sm font-medium">Welcome back,</p>
-          <h1 className="text-2xl font-bold">{profile?.name || 'Chef'}! 👋</h1>
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">Kitchen Dashboard</p>
+          <h1 className="text-2xl font-bold">{profile?.name ? `Hi, ${profile.name}! 👋` : 'Welcome back! 👋'}</h1>
         </div>
-        <Link href="/profile">
-          <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-            <Heart className="w-5 h-5 text-primary" />
+        <Link href="/profile" className="ios-tap-active">
+          <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-border">
+            <Heart className="w-6 h-6 text-primary" />
           </div>
         </Link>
       </header>
 
       {user?.isAnonymous && !profile && (
-        <Card className="mb-8 p-5 rounded-3xl border-none bg-orange-50 border border-orange-100">
-          <div className="flex gap-4 items-start">
-            <LogIn className="w-5 h-5 text-orange-500 shrink-0 mt-1" />
+        <Card className="mb-8 p-6 rounded-[2rem] border-none bg-primary/5 border border-primary/10 shadow-sm overflow-hidden relative group">
+          <div className="flex gap-4 items-start relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+              <LogIn className="w-5 h-5 text-white" />
+            </div>
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-orange-800">Limited Guest Access</h3>
-              <p className="text-xs text-orange-700/80 mt-1">Complete onboarding or sign in to save your recipes and inventory.</p>
-              <div className="flex gap-2 mt-3">
-                <Button size="sm" asChild className="rounded-xl bg-orange-500 hover:bg-orange-600">
-                  <Link href="/onboarding">Setup Profile</Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild className="rounded-xl border-orange-200 bg-white text-orange-600">
-                  <Link href="/auth">Sign In</Link>
-                </Button>
-              </div>
+              <h3 className="text-sm font-bold text-primary">Complete Setup</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Tell us your health goals to unlock AI meal recommendations.</p>
+              <Button size="sm" asChild className="rounded-xl h-10 px-6 font-bold mt-4 shadow-md">
+                <Link href="/onboarding">Setup Profile <ArrowRight className="ml-2 w-3 h-3" /></Link>
+              </Button>
             </div>
           </div>
+          <Sparkles className="absolute -right-2 -bottom-2 w-20 h-20 text-primary/5 rotate-12" />
         </Card>
       )}
 
-      <section className="grid grid-cols-2 gap-3 mb-8">
-        <div className="bg-primary text-white p-4 rounded-3xl">
-          <div className="flex justify-between items-start mb-2">
-            <RefrigeratorIcon className="w-6 h-6 opacity-80" />
-            <span className="text-2xl font-bold">{inventorySummary.total}</span>
-          </div>
-          <p className="text-xs opacity-90">Items in Stock</p>
-        </div>
-        <div className="bg-white p-4 rounded-3xl border border-border">
-          <div className="flex justify-between items-start mb-2">
-            <Flame className="w-6 h-6 text-orange-500" />
-            <span className="text-2xl font-bold">{expiringSoon.length}</span>
-          </div>
-          <p className="text-xs text-muted-foreground">Expiring Soon</p>
-        </div>
+      <section className="grid grid-cols-2 gap-4 mb-8">
+        <Card className="bg-primary text-white p-5 rounded-[2.5rem] border-none shadow-lg shadow-primary/20 flex flex-col gap-1 ios-tap-active">
+          <RefrigeratorIcon className="w-6 h-6 opacity-60 mb-2" />
+          <span className="text-3xl font-black">{inventorySummary.total}</span>
+          <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Stocked Items</p>
+        </Card>
+        <Card className="bg-white p-5 rounded-[2.5rem] border-none shadow-sm flex flex-col gap-1 ios-tap-active">
+          <Flame className="w-6 h-6 text-orange-500 mb-2" />
+          <span className="text-3xl font-black">{inventorySummary.expiring}</span>
+          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Expiring Soon</p>
+        </Card>
       </section>
 
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        <Button variant="secondary" className="rounded-2xl flex flex-col h-auto py-4 gap-2 text-[10px]" asChild>
-          <Link href="/inventory">
-            <Plus className="w-5 h-5" />
-            <span>Inventory</span>
-          </Link>
-        </Button>
-        <Button className="rounded-2xl flex flex-col h-auto py-4 gap-2 bg-accent hover:bg-accent/90 text-accent-foreground text-[10px]" asChild>
-          <Link href="/recipes">
-            <ChefHatIcon className="w-5 h-5" />
-            <span>Cook AI</span>
-          </Link>
-        </Button>
-        <Button variant="outline" className="rounded-2xl flex flex-col h-auto py-4 gap-2 text-[10px]" asChild>
-          <Link href="/shopping">
-            <ShoppingBag className="w-5 h-5" />
-            <span>Shopping</span>
-          </Link>
-        </Button>
+      <div className="flex flex-col gap-4 mb-10">
+        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest px-1">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <Button variant="secondary" className="rounded-[2rem] h-20 flex flex-col gap-1 bg-white border-none shadow-sm ios-tap-active" asChild>
+            <Link href="/inventory">
+              <Plus className="w-5 h-5 text-primary" />
+              <span className="text-[10px] font-bold">Add Items</span>
+            </Link>
+          </Button>
+          <Button className="rounded-[2rem] h-20 flex flex-col gap-1 bg-accent text-accent-foreground border-none shadow-sm ios-tap-active" asChild>
+            <Link href="/recipes">
+              <ChefHat className="w-5 h-5" />
+              <span className="text-[10px] font-bold">Cook with AI</span>
+            </Link>
+          </Button>
+          <Button variant="outline" className="rounded-[2rem] h-20 flex flex-col gap-1 bg-white border-none shadow-sm ios-tap-active" asChild>
+            <Link href="/shopping">
+              <ShoppingBag className="w-5 h-5 text-muted-foreground" />
+              <span className="text-[10px] font-bold">Shopping List</span>
+            </Link>
+          </Button>
+          <Button variant="outline" className="rounded-[2rem] h-20 flex flex-col gap-1 bg-white border-none shadow-sm ios-tap-active" asChild>
+            <Link href="/meal-plan">
+              <CalendarIcon className="w-5 h-5 text-muted-foreground" />
+              <span className="text-[10px] font-bold">Meal Schedule</span>
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <section className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold">Expiring Soon</h2>
-          <Link href="/inventory" className="text-primary text-sm font-semibold flex items-center gap-1">
-            See all <ArrowRight className="w-3 h-3" />
+      <section className="mb-10">
+        <div className="flex justify-between items-center mb-5 px-1">
+          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Inventory Alerts</h2>
+          <Link href="/inventory" className="text-primary text-[11px] font-bold flex items-center gap-1 uppercase tracking-wider">
+            View All <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
         <div className="flex flex-col gap-3">
@@ -167,30 +172,35 @@ export default function Home() {
               <InventoryItemCard key={item.id} item={item} />
             ))
           ) : (
-            <div className="p-8 text-center bg-white rounded-3xl border border-dashed text-muted-foreground">
-              <p>Everything is fresh! 🥦</p>
-            </div>
+            <Card className="p-8 text-center bg-white rounded-[2rem] border-2 border-dashed border-muted shadow-none">
+              <p className="text-muted-foreground text-sm font-medium">Fridge looks fresh! 🥦</p>
+              <Button variant="link" asChild className="mt-2 text-primary font-bold">
+                <Link href="/inventory">Manage Stock</Link>
+              </Button>
+            </Card>
           )}
         </div>
       </section>
 
-      <section className="bg-accent/10 p-5 rounded-3xl mb-8 flex gap-4 border border-accent/20">
-        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shrink-0">
-          <ActivityIcon className="w-6 h-6 text-accent-foreground" />
-        </div>
-        <div>
-          <h3 className="font-bold text-sm mb-1 text-accent-foreground">Personalized Tip</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Based on your preference for <strong>{profile?.dietPreferences?.[0] || 'healthy meals'}</strong>, try exploring our latest recommendations.
-          </p>
-        </div>
-      </section>
+      {profile && (
+        <Card className="bg-accent/10 p-6 rounded-[2.5rem] border border-accent/20 flex gap-5 ios-tap-active">
+          <div className="w-14 h-14 bg-accent rounded-[1.5rem] flex items-center justify-center shrink-0 shadow-sm">
+            <ActivityIcon className="w-7 h-7 text-accent-foreground" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-sm mb-1 text-accent-foreground">Personalized Tip</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Based on your goal for <strong>{profile.healthGoals[0]}</strong>, try adding more {profile.dietPreferences[0] || 'lean proteins'} to your next shopping list.
+            </p>
+          </div>
+        </Card>
+      )}
 
-      <div className="text-center p-4">
-        <p className="text-[10px] text-muted-foreground leading-tight italic">
+      <footer className="mt-12 text-center px-8">
+        <p className="text-[10px] text-muted-foreground leading-relaxed italic opacity-60">
           “This app provides food guidance for informational purposes only and is not a substitute for professional medical advice.”
         </p>
-      </div>
+      </footer>
 
       <BottomNav />
     </div>
@@ -203,9 +213,9 @@ function RefrigeratorIcon(props: any) {
   )
 }
 
-function ChefHatIcon(props: any) {
+function CalendarIcon(props: any) {
   return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><path d="M6 17h12"/></svg>
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
   )
 }
 
