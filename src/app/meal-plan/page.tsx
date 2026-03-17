@@ -4,13 +4,15 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar as CalendarIcon, ChefHat, CheckCircle2, ChevronRight, Clock, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, ChefHat, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { MealPlanEntry } from '@/types/app';
 import { format, parseISO, isToday } from 'date-fns';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function MealPlanPage() {
   const { user, isUserLoading } = useUser();
@@ -36,7 +38,6 @@ export default function MealPlanPage() {
     });
     toast({ 
       title: entry.isCooked ? "Marked as unplanned" : "Delicious! Meal marked as cooked.",
-      variant: entry.isCooked ? "default" : "default"
     });
   };
 
@@ -153,9 +154,3 @@ export default function MealPlanPage() {
     </div>
   );
 }
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
-}
-
-import Link from 'next/link';

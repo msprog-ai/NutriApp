@@ -4,12 +4,12 @@ import { useEffect } from 'react';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { InventoryItemCard } from '@/components/nutrifridge/inventory-item-card';
 import { Button } from '@/components/ui/button';
-import { Plus, Flame, Heart, ArrowRight, Loader2 } from 'lucide-react';
+import { Plus, Flame, Heart, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection } from 'firebase/firestore';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { UserProfile, InventoryItem } from '@/types/app';
 
@@ -106,17 +106,23 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        <Button variant="secondary" className="rounded-2xl flex flex-col h-auto py-4 gap-2" asChild>
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        <Button variant="secondary" className="rounded-2xl flex flex-col h-auto py-4 gap-2 text-[10px]" asChild>
           <Link href="/inventory">
             <Plus className="w-5 h-5" />
-            <span>Add Item</span>
+            <span>Inventory</span>
           </Link>
         </Button>
-        <Button className="rounded-2xl flex flex-col h-auto py-4 gap-2 bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
+        <Button className="rounded-2xl flex flex-col h-auto py-4 gap-2 bg-accent hover:bg-accent/90 text-accent-foreground text-[10px]" asChild>
           <Link href="/recipes">
             <ChefHatIcon className="w-5 h-5" />
-            <span>Cook Now</span>
+            <span>Cook AI</span>
+          </Link>
+        </Button>
+        <Button variant="outline" className="rounded-2xl flex flex-col h-auto py-4 gap-2 text-[10px]" asChild>
+          <Link href="/shopping">
+            <ShoppingBag className="w-5 h-5" />
+            <span>Shopping</span>
           </Link>
         </Button>
       </div>
