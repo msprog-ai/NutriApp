@@ -44,27 +44,6 @@ export interface UserProfile {
   updatedAt: string;
 }
 
-export interface Recipe {
-  id: string;
-  title: string;
-  description: string;
-  whyMatchHealthNeeds: string;
-  prepTimeMinutes: number;
-  cookTimeMinutes: number;
-  difficultyLevel: 'easy' | 'medium' | 'hard';
-  ingredients: string[];
-  missingIngredients?: string[];
-  instructions: string[];
-  estimatedCalories?: number;
-  estimatedCarbs?: number;
-  estimatedProtein?: number;
-  estimatedFat?: number;
-  healthNotes: string[];
-  substitutionSuggestions?: string[];
-  cuisineType: string;
-  generatedAt: string;
-}
-
 export interface ShoppingListItem {
   id: string;
   userId: string;
@@ -79,22 +58,12 @@ export interface ShoppingListItem {
 export interface MealPlanEntry {
   id: string;
   userId: string;
-  recipeId?: string; // Optional if manual entry
-  recipeTitle: string; // Denormalized for display
+  recipeId?: string;
+  recipeTitle: string; 
   planDate: string; // YYYY-MM-DD
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   servings: number;
   isCooked: boolean;
   plannedAt: string;
   cookedAt?: string;
-}
-
-export interface Notification {
-  id: string;
-  userId: string;
-  type: 'expiring_ingredient' | 'low_stock' | 'meal_reminder';
-  message: string;
-  relatedEntityId?: string;
-  sentTime: string;
-  isRead: boolean;
 }
