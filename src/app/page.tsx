@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { InventoryItemCard } from '@/components/nutrifridge/inventory-item-card';
 import { Button } from '@/components/ui/button';
-import { Plus, Flame, Heart, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
+import { Plus, Flame, Heart, ArrowRight, Loader2, ShoppingBag, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -46,7 +46,7 @@ export default function Home() {
     );
   }
 
-  if (!profile) {
+  if (!profile && !user?.isAnonymous) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-6 bg-white">
         <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
@@ -56,9 +56,14 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-foreground">NutriFridge AI</h1>
           <p className="text-muted-foreground mt-2">Personalized nutrition and smart inventory management.</p>
         </div>
-        <Button size="lg" className="w-full rounded-2xl py-6 text-lg" asChild>
-          <Link href="/onboarding">Get Started</Link>
-        </Button>
+        <div className="w-full space-y-3">
+          <Button size="lg" className="w-full rounded-2xl py-6 text-lg font-bold" asChild>
+            <Link href="/onboarding">Get Started</Link>
+          </Button>
+          <Button size="lg" variant="outline" className="w-full rounded-2xl py-6 text-lg font-bold border-2" asChild>
+            <Link href="/auth">Sign In</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -82,12 +87,34 @@ export default function Home() {
       <header className="flex justify-between items-center mb-8">
         <div>
           <p className="text-muted-foreground text-sm font-medium">Welcome back,</p>
-          <h1 className="text-2xl font-bold">{profile.name}! 👋</h1>
+          <h1 className="text-2xl font-bold">{profile?.name || 'Chef'}! 👋</h1>
         </div>
-        <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-          <Heart className="w-5 h-5 text-primary" />
-        </div>
+        <Link href="/profile">
+          <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+            <Heart className="w-5 h-5 text-primary" />
+          </div>
+        </Link>
       </header>
+
+      {user?.isAnonymous && !profile && (
+        <Card className="mb-8 p-5 rounded-3xl border-none bg-orange-50 border border-orange-100">
+          <div className="flex gap-4 items-start">
+            <LogIn className="w-5 h-5 text-orange-500 shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-orange-800">Limited Guest Access</h3>
+              <p className="text-xs text-orange-700/80 mt-1">Complete onboarding or sign in to save your recipes and inventory.</p>
+              <div className="flex gap-2 mt-3">
+                <Button size="sm" asChild className="rounded-xl bg-orange-500 hover:bg-orange-600">
+                  <Link href="/onboarding">Setup Profile</Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild className="rounded-xl border-orange-200 bg-white text-orange-600">
+                  <Link href="/auth">Sign In</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <section className="grid grid-cols-2 gap-3 mb-8">
         <div className="bg-primary text-white p-4 rounded-3xl">
@@ -154,7 +181,7 @@ export default function Home() {
         <div>
           <h3 className="font-bold text-sm mb-1 text-accent-foreground">Personalized Tip</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Based on your preference for <strong>{profile.dietPreferences?.[0] || 'healthy meals'}</strong>, try exploring our latest recommendations.
+            Based on your preference for <strong>{profile?.dietPreferences?.[0] || 'healthy meals'}</strong>, try exploring our latest recommendations.
           </p>
         </div>
       </section>
