@@ -1,0 +1,663 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Stores personal information, health goals, and dietary preferences for a user to personalize the app experience.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "ageRange": {
+          "type": "string",
+          "description": "The user's age range (e.g., '18-24', '25-34')."
+        },
+        "gender": {
+          "type": "string",
+          "description": "The user's gender (optional)."
+        },
+        "heightCm": {
+          "type": "number",
+          "description": "The user's height in centimeters (optional)."
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "The user's weight in kilograms (optional)."
+        },
+        "healthGoals": {
+          "type": "array",
+          "description": "An array of strings describing the user's health objectives (e.g., 'weight loss', 'muscle gain').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dietPreferences": {
+          "type": "array",
+          "description": "An array of strings describing the user's dietary choices (e.g., 'vegetarian', 'low carb').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "healthConcerns": {
+          "type": "array",
+          "description": "An array of strings describing specific health conditions (e.g., 'diabetes', 'high blood pressure').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allergies": {
+          "type": "array",
+          "description": "An array of strings listing specific food allergies (e.g., 'peanuts', 'dairy').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "foodsToAvoid": {
+          "type": "array",
+          "description": "An array of strings listing general foods the user wishes to avoid.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preferredCuisine": {
+          "type": "array",
+          "description": "An array of strings describing preferred cuisine types (e.g., 'Italian', 'Mexican', 'Asian').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cookingSkillLevel": {
+          "type": "string",
+          "description": "The user's self-assessed cooking proficiency (e.g., 'beginner', 'intermediate', 'advanced')."
+        },
+        "householdSize": {
+          "type": "number",
+          "description": "The number of people in the user's household."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "ageRange",
+        "healthGoals",
+        "dietPreferences",
+        "healthConcerns",
+        "allergies",
+        "foodsToAvoid",
+        "preferredCuisine",
+        "cookingSkillLevel",
+        "householdSize",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "InventoryItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InventoryItem",
+      "type": "object",
+      "description": "Represents a single ingredient tracked by the user in their fridge, freezer, or pantry.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the InventoryItem entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile this inventory item belongs to. (Relationship: UserProfile 1:N InventoryItem)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The common name of the ingredient (e.g., 'milk', 'chicken breast')."
+        },
+        "category": {
+          "type": "string",
+          "description": "The categorization of the ingredient (e.g., 'vegetables', 'fruits', 'meat', 'dairy', 'pantry items')."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The amount of the ingredient available."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the quantity (e.g., 'grams', 'units', 'liters', 'oz')."
+        },
+        "expirationDate": {
+          "type": "string",
+          "description": "The date when the ingredient is expected to expire.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any additional notes about the ingredient (optional)."
+        },
+        "location": {
+          "type": "string",
+          "description": "The storage location of the ingredient (e.g., 'fridge', 'freezer', 'pantry')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the inventory item was added.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the inventory item was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "category",
+        "quantity",
+        "unit",
+        "expirationDate",
+        "location",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Recipe": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Recipe",
+      "type": "object",
+      "description": "Represents a single recipe, which can be AI-generated or saved by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Recipe entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The name of the recipe."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description or summary of the recipe."
+        },
+        "whyItMatchesHealthNeeds": {
+          "type": "string",
+          "description": "An explanation generated by AI on why this recipe aligns with the user's health profile."
+        },
+        "prepTimeMinutes": {
+          "type": "number",
+          "description": "Estimated preparation time for the recipe in minutes."
+        },
+        "cookTimeMinutes": {
+          "type": "number",
+          "description": "Estimated cooking time for the recipe in minutes."
+        },
+        "difficultyLevel": {
+          "type": "string",
+          "description": "The skill level required to cook the recipe (e.g., 'easy', 'medium', 'hard')."
+        },
+        "servings": {
+          "type": "number",
+          "description": "The number of servings the recipe yields."
+        },
+        "instructions": {
+          "type": "array",
+          "description": "An ordered array of strings, each representing a step in the cooking process.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "estimatedCalories": {
+          "type": "number",
+          "description": "Estimated total calories per serving or per recipe."
+        },
+        "estimatedCarbs": {
+          "type": "number",
+          "description": "Estimated total carbohydrates per serving or per recipe."
+        },
+        "estimatedProtein": {
+          "type": "number",
+          "description": "Estimated total protein per serving or per recipe."
+        },
+        "estimatedFat": {
+          "type": "number",
+          "description": "Estimated total fat per serving or per recipe."
+        },
+        "healthNotes": {
+          "type": "array",
+          "description": "An array of strings indicating specific health attributes (e.g., 'diabetic-friendly', 'low sodium', 'high protein', 'avoid due to allergy').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "substitutionSuggestions": {
+          "type": "array",
+          "description": "An array of strings suggesting alternative ingredients or cooking methods (optional).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cuisineType": {
+          "type": "string",
+          "description": "The primary cuisine category of the recipe (e.g., 'Italian', 'Mexican')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the recipe was created or generated.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the recipe was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "whyItMatchesHealthNeeds",
+        "prepTimeMinutes",
+        "cookTimeMinutes",
+        "difficultyLevel",
+        "servings",
+        "instructions",
+        "estimatedCalories",
+        "estimatedCarbs",
+        "estimatedProtein",
+        "estimatedFat",
+        "healthNotes",
+        "cuisineType",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RecipeIngredient": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RecipeIngredient",
+      "type": "object",
+      "description": "Describes a specific ingredient requirement for a Recipe.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the RecipeIngredient entity."
+        },
+        "recipeId": {
+          "type": "string",
+          "description": "Reference to the Recipe this ingredient belongs to. (Relationship: Recipe 1:N RecipeIngredient)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the ingredient required (e.g., 'flour', 'chicken breast')."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The required quantity of the ingredient."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the required quantity (e.g., 'cups', 'grams', 'pieces')."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Specific preparation notes for the ingredient (e.g., 'diced', 'freshly ground')."
+        },
+        "isOptional": {
+          "type": "boolean",
+          "description": "Indicates if this ingredient is optional for the recipe."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the recipe ingredient entry was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the recipe ingredient entry was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "recipeId",
+        "name",
+        "quantity",
+        "unit",
+        "isOptional",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ShoppingListItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ShoppingListItem",
+      "type": "object",
+      "description": "Represents an item on a user's shopping list, possibly generated from a recipe or added manually.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ShoppingListItem entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile this shopping list item belongs to. (Relationship: UserProfile 1:N ShoppingListItem)"
+        },
+        "itemName": {
+          "type": "string",
+          "description": "The name of the item to be bought."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The amount of the item needed."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the quantity (e.g., 'grams', 'units', 'liters', 'bunch')."
+        },
+        "isBought": {
+          "type": "boolean",
+          "description": "Boolean indicating if the item has been purchased."
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "Timestamp when the item was added to the shopping list.",
+          "format": "date-time"
+        },
+        "boughtAt": {
+          "type": "string",
+          "description": "Timestamp when the item was marked as bought (optional).",
+          "format": "date-time"
+        },
+        "sourceRecipeId": {
+          "type": "string",
+          "description": "Reference to the Recipe that generated this shopping list item (optional). (Relationship: Recipe 1:N ShoppingListItem)"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any additional notes for the shopping item (e.g., 'organic', 'brand X')."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "itemName",
+        "quantity",
+        "unit",
+        "isBought",
+        "addedAt"
+      ]
+    },
+    "MealPlanEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MealPlanEntry",
+      "type": "object",
+      "description": "Represents a recipe planned by the user for a specific meal on a given date in their weekly meal planner.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the MealPlanEntry entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile this meal plan entry belongs to. (Relationship: UserProfile 1:N MealPlanEntry)"
+        },
+        "recipeId": {
+          "type": "string",
+          "description": "Reference to the Recipe planned for this entry. (Relationship: Recipe 1:N MealPlanEntry)"
+        },
+        "planDate": {
+          "type": "string",
+          "description": "The specific date for which the meal is planned (YYYY-MM-DD).",
+          "format": "date"
+        },
+        "mealType": {
+          "type": "string",
+          "description": "The type of meal (e.g., 'breakfast', 'lunch', 'dinner', 'snack')."
+        },
+        "servingsPlanned": {
+          "type": "number",
+          "description": "The number of servings planned for this meal, allowing user adjustments."
+        },
+        "isCooked": {
+          "type": "boolean",
+          "description": "Boolean indicating if the meal has been cooked."
+        },
+        "cookedAt": {
+          "type": "string",
+          "description": "Timestamp when the meal was marked as cooked (optional).",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the meal plan entry was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the meal plan entry was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "recipeId",
+        "planDate",
+        "mealType",
+        "servingsPlanned",
+        "isCooked",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Stores notifications for a user, such as expiring ingredients, low stock, or meal plan reminders.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Notification entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile for whom the notification is intended. (Relationship: UserProfile 1:N Notification)"
+        },
+        "type": {
+          "type": "string",
+          "description": "The category or type of notification (e.g., 'expiring_ingredient', 'low_stock', 'meal_plan_reminder', 'recipe_suggestion')."
+        },
+        "message": {
+          "type": "string",
+          "description": "The content of the notification message."
+        },
+        "relatedEntityId": {
+          "type": "string",
+          "description": "Optional reference to an associated entity (e.g., InventoryItem ID for expiring ingredient, Recipe ID for recipe suggestion). This can be null. (Relationship: various 1:1 Notification)"
+        },
+        "isRead": {
+          "type": "boolean",
+          "description": "Boolean indicating if the user has read the notification."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the notification was generated.",
+          "format": "date-time"
+        },
+        "scheduledSendTime": {
+          "type": "string",
+          "description": "The intended time for the notification to be sent, if scheduled for the future.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "type",
+        "message",
+        "isRead",
+        "createdAt"
+      ]
+    },
+    "UserRecipeInteraction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserRecipeInteraction",
+      "type": "object",
+      "description": "Tracks a user's interactions with recipes, such as viewing, saving, cooking, or rating them, forming a comprehensive recipe history.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserRecipeInteraction entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile interacting with the recipe. (Relationship: UserProfile 1:N UserRecipeInteraction)"
+        },
+        "recipeId": {
+          "type": "string",
+          "description": "Reference to the Recipe being interacted with. (Relationship: Recipe 1:N UserRecipeInteraction)"
+        },
+        "interactionType": {
+          "type": "string",
+          "description": "The type of interaction (e.g., 'viewed', 'saved', 'cooked', 'rated')."
+        },
+        "interactionDate": {
+          "type": "string",
+          "description": "Timestamp of the interaction.",
+          "format": "date-time"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Optional rating given by the user (1-5), applicable if interactionType is 'rated'."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes or comments from the user about this interaction."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user recipe interaction was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user recipe interaction was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "recipeId",
+        "interactionType",
+        "interactionDate",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores personal information, health goals, and dietary preferences for a user. The document ID is the user's Firebase Authentication UID. Authorization is path-based: `request.auth.uid` must match `{userId}`."
+        }
+      },
+      {
+        "path": "/users/{userId}/inventoryItems/{inventoryItemId}",
+        "definition": {
+          "entityName": "InventoryItem",
+          "schema": {
+            "$ref": "#/backend/entities/InventoryItem"
+          },
+          "description": "Represents a single ingredient tracked by the user. Authorization is path-based: `request.auth.uid` must match `{userId}`. Includes denormalized 'userId' field for authorization independence and query flexibility."
+        }
+      },
+      {
+        "path": "/recipes/{recipeId}",
+        "definition": {
+          "entityName": "Recipe",
+          "schema": {
+            "$ref": "#/backend/entities/Recipe"
+          },
+          "description": "Represents a single recipe, which can be AI-generated or saved by a user. These are global recipes, intended to be broadly accessible to authenticated users."
+        }
+      },
+      {
+        "path": "/recipes/{recipeId}/recipeIngredients/{recipeIngredientId}",
+        "definition": {
+          "entityName": "RecipeIngredient",
+          "schema": {
+            "$ref": "#/backend/entities/RecipeIngredient"
+          },
+          "description": "Describes a specific ingredient requirement for a Recipe. Access is dependent on the parent 'Recipe' document's accessibility. No additional denormalized authorization fields are required as 'Recipes' are broadly accessible."
+        }
+      },
+      {
+        "path": "/users/{userId}/shoppingLists/{shoppingListItemId}",
+        "definition": {
+          "entityName": "ShoppingListItem",
+          "schema": {
+            "$ref": "#/backend/entities/ShoppingListItem"
+          },
+          "description": "Represents an item on a user's shopping list. Authorization is path-based: `request.auth.uid` must match `{userId}`. Includes denormalized 'userId' field for authorization independence and query flexibility."
+        }
+      },
+      {
+        "path": "/users/{userId}/mealPlans/{mealPlanEntryId}",
+        "definition": {
+          "entityName": "MealPlanEntry",
+          "schema": {
+            "$ref": "#/backend/entities/MealPlanEntry"
+          },
+          "description": "Represents a recipe planned by the user for a specific meal on a given date. Authorization is path-based: `request.auth.uid` must match `{userId}`. Includes denormalized 'userId' field for authorization independence and query flexibility."
+        }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores notifications for a user. Authorization is path-based: `request.auth.uid` must match `{userId}`. Includes denormalized 'userId' field for authorization independence and query flexibility."
+        }
+      },
+      {
+        "path": "/users/{userId}/recipeInteractions/{userRecipeInteractionId}",
+        "definition": {
+          "entityName": "UserRecipeInteraction",
+          "schema": {
+            "$ref": "#/backend/entities/UserRecipeInteraction"
+          },
+          "description": "Tracks a user's interactions with recipes (viewing, saving, cooking, rating). Authorization is path-based: `request.auth.uid` must match `{userId}`. Includes denormalized 'userId' field for authorization independence and query flexibility."
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to be highly secure, scalable, and debuggable, adhering strictly to the core design principles and strategy mandates. \n\nAuthorization Independence is achieved primarily through path-based ownership for all user-specific data. For entities like `UserProfile`, `InventoryItem`, `ShoppingListItem`, `MealPlanEntry`, `Notification`, and `UserRecipeInteraction`, the owning `userId` is explicitly part of the document path (e.g., `/users/{userId}/inventoryItems/{inventoryItemId}`). This means that Firestore security rules can authorize requests by simply comparing `request.auth.uid` to the `{userId}` wildcard in the path. The `userId` field is also denormalized into each of these user-owned documents, providing an additional, redundant check for rules and simplifying client-side queries. This eliminates the need for `get()` calls in security rules to check parent document ownership, which is critical for supporting atomic operations and preventing complex, hard-to-debug rules.\n\nStructural Segregation is implemented by separating global, broadly accessible `Recipe` data into its own top-level collection (`/recipes/{recipeId}`). User-specific interactions and data are strictly segregated under `/users/{userId}/...` paths. This ensures that documents with different security postures (e.g., public/shared recipes vs. private user inventory) do not reside in the same collection, greatly simplifying security rules. For example, all documents within `/users/{userId}/inventoryItems` share the same ownership-based security requirements.\n\nQAPs (Query/Access Patterns) are fully supported by this structure. Secure `list` operations are straightforward because all user-specific collections are directly owned by the `request.auth.uid` via the path wildcard. For instance, a user can only list `InventoryItem`s under their specific `/users/{userId}/inventoryItems` path, where `{userId}` matches their `auth.uid`. Similarly, listing `Recipe`s from the `/recipes` collection is secure if all authenticated users are permitted to read them, as no `get()` call to a parent is needed. Nested collections like `RecipeIngredient` inherit the access posture of their parent `Recipe`, simplifying their rules as well. This design makes authorization intent explicit and minimizes rule complexity, fulfilling the clarity of intent principle."
+  }
+}
