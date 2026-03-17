@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from 'react';
@@ -17,7 +16,6 @@ import { UserProfile, InventoryItem } from '@/types/app';
 
 export default function Home() {
   const { user, isUserLoading, auth } = useUser();
-  const router = useRouter();
   const firestore = useFirestore();
 
   useEffect(() => {
@@ -182,7 +180,7 @@ export default function Home() {
         </div>
       </section>
 
-      {profile && (
+      {profile && profile.healthGoals && profile.healthGoals.length > 0 && (
         <Card className="bg-accent/10 p-6 rounded-[2.5rem] border border-accent/20 flex gap-5 ios-tap-active">
           <div className="w-14 h-14 bg-accent rounded-[1.5rem] flex items-center justify-center shrink-0 shadow-sm">
             <ActivityIcon className="w-7 h-7 text-accent-foreground" />

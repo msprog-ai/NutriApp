@@ -2,37 +2,30 @@
 
 NutriFridge AI is a smart kitchen assistant that helps you manage your fridge inventory, reduce food waste, and generate personalized recipes based on your health goals and available ingredients.
 
-## Getting Started
+## Deployment to GitHub
 
-### 1. Install Dependencies
-```bash
-npm install
-```
+1. **Initialize Git**:
+   ```bash
+   git init
+   git remote add origin https://github.com/msprog-ai/NutriApp.git
+   ```
 
-### 2. Set Up Environment Variables
-Create a `.env` file in the root directory and add your Google AI API Key:
-```env
-GOOGLE_GENAI_API_KEY=your_api_key_here
-# Optional: Override the default model
-# GENAI_MODEL=googleai/gemini-1.5-pro
-```
+2. **Commit and Push**:
+   ```bash
+   git add .
+   git commit -m "Initial NutriFridge AI codebase"
+   git push -u origin main
+   ```
 
-### 3. Run the Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:9002](http://localhost:9002) with your browser to see the app.
+3. **Firebase App Hosting**:
+   Go to the [Firebase Console](https://console.firebase.google.com/), select your project, and set up **App Hosting** by connecting this GitHub repository.
 
-### 4. Run Genkit Developer UI (Optional)
-To test and debug AI flows directly:
-```bash
-npm run genkit:dev
-```
+4. **Environment Variables**:
+   In the App Hosting configuration, add `GOOGLE_GENAI_API_KEY` with your Gemini API key.
 
 ## Key Features
-- **Smart Inventory**: Track expiry dates with visual alerts.
-- **AI Recipe Generator**: Creates meals from items you already have.
-- **Personalized Onboarding**: Tailors suggestions to your allergies and diets.
-- **AI Kitchen Assistant**: Multi-turn chat for cooking advice.
+- **Smart Inventory**: Track ingredients and expiry dates with a mobile scanner.
+- **AI Recipe Generator**: Get 3 personalized meal ideas based on what's in your fridge.
 - **Meal Planner**: Schedule your week and track "cooked" status.
-- **Shopping List**: Automatically track missing ingredients.
+- **AI Assistant**: Multi-turn chat for nutrition advice and cooking tips.
+- **Shopping List**: Automatically track missing ingredients from recipes.
