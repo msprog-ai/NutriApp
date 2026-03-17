@@ -1,3 +1,156 @@
+"use client";
+
+import { useAppData } from '@/hooks/use-app-data';
+import { BottomNav } from '@/components/layout/bottom-nav';
+import { InventoryItemCard } from '@/components/nutrifridge/inventory-item-card';
+import { Button } from '@/components/ui/button';
+import { Plus, Flame, Clock, Heart, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { differenceInDays, parseISO } from 'date-fns';
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
-  return <></>;
+  const { profile, inventory, loading } = useAppData();
+  const router = useRouter();
+
+  if (loading) return null;
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-6 bg-white">
+        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+          <Flame className="w-12 h-12 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">NutriFridge AI</h1>
+          <p className="text-muted-foreground mt-2">Personalized nutrition and smart inventory management.</p>
+        </div>
+        <Button size="lg" className="w-full rounded-2xl py-6 text-lg" asChild>
+          <Link href="/onboarding">Get Started</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const expiringSoon = inventory
+    .filter(item => {
+      const days = differenceInDays(parseISO(item.expirationDate), new Date());
+      return days >= 0 && days <= 3;
+    })
+    .slice(0, 3);
+
+  const inventorySummary = {
+    total: inventory.length,
+    fridge: inventory.filter(i => i.location === 'fridge').length,
+    freezer: inventory.filter(i => i.location === 'freezer').length,
+    pantry: inventory.filter(i => i.location === 'pantry').length,
+  };
+
+  return (
+    <div className="pb-24 pt-8 px-6 max-w-md mx-auto min-h-screen">
+      <header className="flex justify-between items-center mb-8">
+        <div>
+          <p className="text-muted-foreground text-sm font-medium">Welcome back,</p>
+          <h1 className="text-2xl font-bold">{profile.name}! 👋</h1>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+          <Heart className="w-5 h-5 text-primary" />
+        </div>
+      </header>
+
+      {/* Quick Stats */}
+      <section className="grid grid-cols-2 gap-3 mb-8">
+        <div className="bg-primary text-white p-4 rounded-3xl">
+          <div className="flex justify-between items-start mb-2">
+            <RefrigeratorIcon className="w-6 h-6 opacity-80" />
+            <span className="text-2xl font-bold">{inventorySummary.total}</span>
+          </div>
+          <p className="text-xs opacity-90">Items in Stock</p>
+        </div>
+        <div className="bg-white p-4 rounded-3xl border border-border">
+          <div className="flex justify-between items-start mb-2">
+            <Flame className="w-6 h-6 text-orange-500" />
+            <span className="text-2xl font-bold">{expiringSoon.length}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Expiring Soon</p>
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        <Button variant="secondary" className="rounded-2xl flex flex-col h-auto py-4 gap-2" asChild>
+          <Link href="/inventory">
+            <Plus className="w-5 h-5" />
+            <span>Add Item</span>
+          </Link>
+        </Button>
+        <Button className="rounded-2xl flex flex-col h-auto py-4 gap-2 bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
+          <Link href="/recipes">
+            <ChefHatIcon className="w-5 h-5" />
+            <span>Cook Now</span>
+          </Link>
+        </Button>
+      </div>
+
+      {/* Expiring Soon */}
+      <section className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-bold">Expiring Soon</h2>
+          <Link href="/inventory" className="text-primary text-sm font-semibold flex items-center gap-1">
+            See all <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        <div className="flex flex-col gap-3">
+          {expiringSoon.length > 0 ? (
+            expiringSoon.map(item => (
+              <InventoryItemCard key={item.id} item={item} />
+            ))
+          ) : (
+            <div className="p-8 text-center bg-white rounded-3xl border border-dashed text-muted-foreground">
+              <p>Everything is fresh! 🥦</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Health Tip */}
+      <section className="bg-accent/10 p-5 rounded-3xl mb-8 flex gap-4 border border-accent/20">
+        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shrink-0">
+          <ActivityIcon className="w-6 h-6 text-accent-foreground" />
+        </div>
+        <div>
+          <h3 className="font-bold text-sm mb-1 text-accent-foreground">Personalized Tip</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Based on your preference for <strong>high protein</strong>, try adding Greek yogurt or lean chicken to your inventory today.
+          </p>
+        </div>
+      </section>
+
+      <div className="text-center p-4">
+        <p className="text-[10px] text-muted-foreground leading-tight italic">
+          “This app provides food guidance for informational purposes only and is not a substitute for professional medical advice.”
+        </p>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}
+
+function RefrigeratorIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/><path d="M5 10h14"/><path d="M15 7v6"/><path d="M15 15v3"/></svg>
+  )
+}
+
+function ChefHatIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><path d="M6 17h12"/></svg>
+  )
+}
+
+function ActivityIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  )
 }

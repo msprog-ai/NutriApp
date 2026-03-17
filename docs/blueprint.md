@@ -1,0 +1,18 @@
+# **App Name**: NutriFridge AI
+
+## Core Features:
+
+- Secure User Authentication & Profile Management: Allows users to create accounts, log in using email/password or Google Sign-In, and manage personal profiles including age, health goals, dietary preferences, health concerns, and allergies. This profile data is stored in Firebase for personalized app experiences.
+- Smart Inventory Tracker: Enables users to add, categorize, track quantities, units, and expiration dates for ingredients across their fridge, freezer, and pantry. Features include searching, filtering by category, sorting by expiration, and viewing low-stock or soon-to-expire items to reduce food waste. All inventory data is managed in Firestore.
+- AI-Powered Recipe Generation: Utilizes a generative AI tool to suggest personalized recipes based on current inventory, expiring ingredients, user diet preferences, health concerns, allergies, and desired serving sizes. Recipes include title, description, reasons for health match, prep/cook times, difficulty, ingredients from inventory, missing ingredients, and step-by-step instructions. Integrates with Firebase-supported AI services.
+- Health-Aware Recipe Display: Presents detailed recipe cards that include estimated nutritional information (calories, carbs, protein, fat), health notes (e.g., 'diabetic-friendly', 'low sodium', 'avoid due to allergy'), and optional substitution suggestions. Displays a mandatory disclaimer: 'This app provides food guidance for informational purposes only and is not a substitute for professional medical advice.'
+- Meal Planning & Shopping List Integration: Allows users to save favorite recipes, add them to a weekly meal planner, and generate dynamic shopping lists based on missing ingredients required for planned meals. Users can track items as bought, planned, or cooked. All related data is stored in Firestore.
+- Personalized Dashboard & Notifications: A centralized dashboard displaying quick-view information like expiring ingredients, inventory count, and quick AI recipe suggestions. Uses Firebase Cloud Messaging for timely notifications on expiring items, low inventory, and meal plan reminders.
+
+## Style Guidelines:
+
+- A light color scheme to evoke cleanliness and freshness. Primary action color: a deep, balanced green (#29993D), symbolizing health and vitality. Background: a very light, desaturated green (#ECF6EE), providing a serene canvas. Accent color: a vibrant, warm yellow-green (#AAE25B) for highlights and call-to-action elements, offering a fresh contrast and inviting feel.
+- A single font, 'Inter' (sans-serif), will be used for both headlines and body text. Its modern, clear, and neutral design ensures high readability across all screen sizes, supporting the app's clean and functional aesthetic while remaining user-friendly for non-technical users.
+- Utilize a consistent set of simple, recognizable outline-style icons. These icons will clearly represent inventory categories, navigation actions, and recipe elements without overwhelming the user interface, aligning with the clean and modern design ethos.
+- A mobile-first responsive layout features generous padding and margin for breathability. Content is organized into 'rounded cards' to soften the design and improve visual grouping. Easy navigation is achieved through persistent bottom tabs, and interactive elements like buttons use 'clear call-to-action' designs.
+- Subtle, smooth animations will be applied to transitions between screens and interactive elements. These provide elegant visual feedback, enhancing the modern feel and guiding the user's attention without being distracting.

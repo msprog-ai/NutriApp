@@ -1,3 +1,16 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "landing-hero",
+      "description": "Fresh vegetables and fruit in a modern fridge context",
+      "imageUrl": "https://picsum.photos/seed/nutrifridge-hero/800/600",
+      "imageHint": "fresh food"
+    },
+    {
+      "id": "onboarding-diet",
+      "description": "Healthy meal prep variety",
+      "imageUrl": "https://picsum.photos/seed/diet-pref/600/400",
+      "imageHint": "healthy diet"
+    }
+  ]
 }
