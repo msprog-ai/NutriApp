@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NutriFridge AI
 
 NutriFridge AI is a smart kitchen assistant that helps you manage your fridge inventory, reduce food waste, and generate personalized recipes based on your health goals and available ingredients.
@@ -29,3 +30,6 @@ NutriFridge AI is a smart kitchen assistant that helps you manage your fridge in
 - **Meal Planner**: Schedule your week and track "cooked" status.
 - **AI Assistant**: Multi-turn chat for nutrition advice and cooking tips.
 - **Shopping List**: Automatically track missing ingredients from recipes.
+=======
+# NutriApp
+>>>>>>> 0fda5ccff1a30e1d2fd2ad9c9e02f3ed76e7a8a9
