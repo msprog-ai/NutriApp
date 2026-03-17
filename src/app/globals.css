@@ -4,56 +4,37 @@
 
 @layer base {
   :root {
-    --background: 135 40% 97%; /* #ECF6EE - very light desaturated green */
+    --background: 135 40% 97%; /* #ECF6EE */
     --foreground: 135 50% 10%;
     --card: 0 0% 100%;
     --card-foreground: 135 50% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 135 50% 10%;
-    --primary: 131 58% 38%; /* #29993D - deep balanced green */
+    --primary: 131 58% 38%; /* #29993D */
     --primary-foreground: 0 0% 100%;
     --secondary: 135 20% 90%;
     --secondary-foreground: 135 50% 20%;
     --muted: 135 10% 92%;
     --muted-foreground: 135 10% 40%;
-    --accent: 85 71% 62%; /* #AAE25B - vibrant warm yellow-green */
+    --accent: 85 71% 62%; /* #AAE25B */
     --accent-foreground: 135 50% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 135 20% 88%;
     --input: 135 20% 88%;
     --ring: 131 58% 38%;
-    --radius: 1rem;
-  }
-  .dark {
-    --background: 135 50% 5%;
-    --foreground: 135 10% 95%;
-    --card: 135 50% 8%;
-    --card-foreground: 135 10% 95%;
-    --popover: 135 50% 8%;
-    --popover-foreground: 135 10% 95%;
-    --primary: 131 58% 38%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 135 30% 15%;
-    --secondary-foreground: 135 10% 95%;
-    --muted: 135 30% 15%;
-    --muted-foreground: 135 10% 65%;
-    --accent: 85 71% 62%;
-    --accent-foreground: 135 50% 10%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 135 30% 18%;
-    --input: 135 30% 18%;
-    --ring: 131 58% 38%;
+    --radius: 1.25rem;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground font-body antialiased overflow-x-hidden;
+    padding-top: env(safe-area-inset-top);
   }
 }
 
@@ -63,4 +44,19 @@
 
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-card-shadow {
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Scrollbar for Mobile */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.ios-tap-active:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease;
 }

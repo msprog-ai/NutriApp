@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Inter } from 'next/font/google';
 import { FirebaseClientProvider } from '@/firebase';
@@ -6,9 +6,26 @@ import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#29993D',
+};
+
 export const metadata: Metadata = {
   title: 'NutriFridge AI',
   description: 'Smart AI Recipe & Fridge Inventory Planner',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'NutriFridge',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -30,9 +47,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased bg-background">
+      <body className="font-body antialiased bg-background overflow-x-hidden selection:bg-primary/20">
         <FirebaseClientProvider>
-          {children}
+          <main className="min-h-screen pb-[calc(env(safe-area-inset-bottom)+5rem)]">
+            {children}
+          </main>
           <Toaster />
         </FirebaseClientProvider>
       </body>
