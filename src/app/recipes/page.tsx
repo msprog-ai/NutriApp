@@ -1,32 +1,52 @@
 "use client";
 
 import { useState } from 'react';
-import { useAppData } from '@/hooks/use-app-data';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { RecipeCard } from '@/components/nutrifridge/recipe-card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ChefHat, Sparkles, Loader2, ArrowRight, Info } from 'lucide-react';
-import { generatePersonalizedRecipes, GeneratePersonalizedRecipesOutput } from '@/ai/flows/generate-personalized-recipes';
+import { generatePersonalizedRecipes } from '@/ai/flows/generate-personalized-recipes';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, collection, addDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { InventoryItem, UserProfile } from '@/types/app';
 
 export default function RecipesPage() {
-  const { profile, inventory, loading: dataLoading } = useAppData();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
   const [generating, setGenerating] = useState(false);
   const [recipes, setRecipes] = useState<any[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
 
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'user_profiles', user.uid);
+  }, [firestore, user]);
+
+  const { data: profile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
+
+  const inventoryQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'inventory_items');
+  }, [firestore, user]);
+
+  const { data: inventory, isLoading: isInventoryLoading } = useCollection<InventoryItem>(inventoryQuery);
+
   const handleGenerate = async () => {
-    if (!profile || inventory.length === 0) return;
+    if (!profile || !inventory || inventory.length === 0) return;
     setGenerating(true);
     try {
       const result = await generatePersonalizedRecipes({
@@ -37,13 +57,39 @@ export default function RecipesPage() {
       });
       setRecipes(result.recipes);
     } catch (e) {
-      console.error(e);
+      toast({ title: "Failed to generate recipes", variant: "destructive" });
     } finally {
       setGenerating(false);
     }
   };
 
-  if (dataLoading) return null;
+  const handleAddToMealPlan = (recipe: any) => {
+    if (!user || !firestore) return;
+
+    const colRef = collection(firestore, 'users', user.uid, 'meal_plan_entries');
+    const data = {
+      userId: user.uid,
+      recipeTitle: recipe.title,
+      planDate: new Date().toISOString().split('T')[0],
+      mealType: 'dinner',
+      servings: profile?.householdSize || 1,
+      isCooked: false,
+      plannedAt: new Date().toISOString(),
+      nutritionalInfo: recipe.nutritionalEstimates
+    };
+
+    addDocumentNonBlocking(colRef, data);
+    setSelectedRecipe(null);
+    toast({ title: "Added to your meal plan!" });
+  };
+
+  if (isUserLoading || isProfileLoading || isInventoryLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-md mx-auto min-h-screen">
@@ -65,7 +111,7 @@ export default function RecipesPage() {
             <Button 
               className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-2xl w-full h-12 font-bold"
               onClick={handleGenerate}
-              disabled={generating || inventory.length === 0}
+              disabled={generating || !inventory || inventory.length === 0}
             >
               {generating ? (
                 <>
@@ -87,7 +133,7 @@ export default function RecipesPage() {
       <Tabs defaultValue="suggestions" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl p-1 shadow-sm h-12 mb-6 border border-border">
           <TabsTrigger value="suggestions" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white transition-all">AI Suggestions</TabsTrigger>
-          <TabsTrigger value="expiring" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Expiring Soon</TabsTrigger>
+          <TabsTrigger value="history" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Saved</TabsTrigger>
         </TabsList>
         
         <TabsContent value="suggestions" className="space-y-4">
@@ -106,22 +152,18 @@ export default function RecipesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="expiring">
+        <TabsContent value="history">
           <div className="text-center py-12 bg-white rounded-3xl border-2 border-dashed border-border">
-            <p className="text-muted-foreground">Focusing on items expiring soon...</p>
-            <Button variant="ghost" className="mt-4 text-primary font-bold" onClick={handleGenerate}>
-              Generate Now <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
+            <p className="text-muted-foreground">Your saved recipes will appear here.</p>
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* Recipe Detail Dialog */}
       <Dialog open={!!selectedRecipe} onOpenChange={() => setSelectedRecipe(null)}>
         <DialogContent className="max-w-md h-[85vh] p-0 flex flex-col rounded-t-[2.5rem]">
           {selectedRecipe && (
             <>
-              <DialogHeader className="p-6 pb-2">
+              <DialogHeader className="p-6 pb-2 text-left">
                 <DialogTitle className="text-2xl font-bold pr-6">{selectedRecipe.title}</DialogTitle>
                 <div className="flex gap-2 mt-2">
                   <Badge className="bg-primary/10 text-primary border-none">{selectedRecipe.difficultyLevel}</Badge>
@@ -198,16 +240,10 @@ export default function RecipesPage() {
                       ))}
                     </ul>
                   </div>
-
-                  <div className="p-4 bg-muted/30 rounded-2xl text-center">
-                    <p className="text-[10px] text-muted-foreground italic leading-tight">
-                      “This app provides food guidance for informational purposes only and is not a substitute for professional medical advice.”
-                    </p>
-                  </div>
                 </div>
               </ScrollArea>
               <DialogFooter className="p-6 border-t mt-auto">
-                <Button className="w-full rounded-2xl h-14 text-lg font-bold">Add to Meal Plan</Button>
+                <Button className="w-full rounded-2xl h-14 text-lg font-bold" onClick={() => handleAddToMealPlan(selectedRecipe)}>Add to Meal Plan</Button>
               </DialogFooter>
             </>
           )}

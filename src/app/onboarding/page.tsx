@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { useAppData } from '@/hooks/use-app-data';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,13 +17,17 @@ import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserProfile } from '@/types/app';
+import { useUser, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const STEPS = 5;
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
-  const { updateProfile } = useAppData();
   const router = useRouter();
+  const { user } = useUser();
+  const firestore = useFirestore();
 
   const [formData, setFormData] = useState<Partial<UserProfile>>({
     name: '',
@@ -37,7 +40,6 @@ export default function OnboardingPage() {
     preferredCuisine: [],
     cookingSkillLevel: 'beginner',
     householdSize: 1,
-    onboarded: true
   });
 
   const nextStep = () => setStep(s => Math.min(s + 1, STEPS));
@@ -54,7 +56,17 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    await updateProfile(formData);
+    if (!user || !firestore) return;
+    
+    const profileRef = doc(firestore, 'user_profiles', user.uid);
+    const data = {
+      ...formData,
+      id: user.uid,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    } as any;
+
+    setDocumentNonBlocking(profileRef, data, { merge: true });
     router.push('/');
   };
 

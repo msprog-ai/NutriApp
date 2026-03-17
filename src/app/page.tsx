@@ -1,19 +1,50 @@
 "use client";
 
-import { useAppData } from '@/hooks/use-app-data';
+import { useEffect } from 'react';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { InventoryItemCard } from '@/components/nutrifridge/inventory-item-card';
 import { Button } from '@/components/ui/button';
-import { Plus, Flame, Clock, Heart, ArrowRight } from 'lucide-react';
+import { Plus, Flame, Heart, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, collection, query, where } from 'firebase/firestore';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { UserProfile, InventoryItem } from '@/types/app';
 
 export default function Home() {
-  const { profile, inventory, loading } = useAppData();
+  const { user, isUserLoading, auth } = useUser();
   const router = useRouter();
+  const firestore = useFirestore();
 
-  if (loading) return null;
+  useEffect(() => {
+    if (!isUserLoading && !user && auth) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, auth]);
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'user_profiles', user.uid);
+  }, [firestore, user]);
+
+  const { data: profile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
+
+  const inventoryQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'inventory_items');
+  }, [firestore, user]);
+
+  const { data: inventory, isLoading: isInventoryLoading } = useCollection<InventoryItem>(inventoryQuery);
+
+  if (isUserLoading || isProfileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
@@ -32,7 +63,7 @@ export default function Home() {
     );
   }
 
-  const expiringSoon = inventory
+  const expiringSoon = (inventory || [])
     .filter(item => {
       const days = differenceInDays(parseISO(item.expirationDate), new Date());
       return days >= 0 && days <= 3;
@@ -40,10 +71,10 @@ export default function Home() {
     .slice(0, 3);
 
   const inventorySummary = {
-    total: inventory.length,
-    fridge: inventory.filter(i => i.location === 'fridge').length,
-    freezer: inventory.filter(i => i.location === 'freezer').length,
-    pantry: inventory.filter(i => i.location === 'pantry').length,
+    total: inventory?.length || 0,
+    fridge: inventory?.filter(i => i.location === 'fridge').length || 0,
+    freezer: inventory?.filter(i => i.location === 'freezer').length || 0,
+    pantry: inventory?.filter(i => i.location === 'pantry').length || 0,
   };
 
   return (
@@ -58,7 +89,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Quick Stats */}
       <section className="grid grid-cols-2 gap-3 mb-8">
         <div className="bg-primary text-white p-4 rounded-3xl">
           <div className="flex justify-between items-start mb-2">
@@ -76,7 +106,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3 mb-8">
         <Button variant="secondary" className="rounded-2xl flex flex-col h-auto py-4 gap-2" asChild>
           <Link href="/inventory">
@@ -92,7 +121,6 @@ export default function Home() {
         </Button>
       </div>
 
-      {/* Expiring Soon */}
       <section className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">Expiring Soon</h2>
@@ -113,7 +141,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Health Tip */}
       <section className="bg-accent/10 p-5 rounded-3xl mb-8 flex gap-4 border border-accent/20">
         <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shrink-0">
           <ActivityIcon className="w-6 h-6 text-accent-foreground" />
@@ -121,7 +148,7 @@ export default function Home() {
         <div>
           <h3 className="font-bold text-sm mb-1 text-accent-foreground">Personalized Tip</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Based on your preference for <strong>high protein</strong>, try adding Greek yogurt or lean chicken to your inventory today.
+            Based on your preference for <strong>{profile.dietPreferences?.[0] || 'healthy meals'}</strong>, try exploring our latest recommendations.
           </p>
         </div>
       </section>

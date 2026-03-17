@@ -1,26 +1,44 @@
 "use client";
 
-import { useAppData } from '@/hooks/use-app-data';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
-import { Settings, LogOut, ChevronRight, Shield, Heart, Bell, Trash2 } from 'lucide-react';
-import { auth } from '@/lib/firebase';
+import { Settings, LogOut, ChevronRight, Shield, Heart, Bell, Loader2 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { UserProfile } from '@/types/app';
 
 export default function ProfilePage() {
-  const { profile, loading } = useAppData();
+  const { user, isUserLoading, auth } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
 
-  if (loading || !profile) return null;
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'user_profiles', user.uid);
+  }, [firestore, user]);
+
+  const { data: profile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
 
   const handleSignOut = async () => {
-    await signOut(auth);
-    router.push('/');
+    if (auth) {
+      await signOut(auth);
+      router.push('/');
+    }
   };
+
+  if (isUserLoading || isProfileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!profile) return null;
 
   return (
     <div className="pb-24 pt-8 px-6 max-w-md mx-auto min-h-screen">
@@ -28,7 +46,7 @@ export default function ProfilePage() {
         <div className="relative">
           <Avatar className="w-24 h-24 border-4 border-white shadow-xl">
             <AvatarFallback className="bg-primary text-white text-3xl font-bold">
-              {profile.name.charAt(0)}
+              {profile.name?.charAt(0) || '?'}
             </AvatarFallback>
           </Avatar>
           <div className="absolute bottom-0 right-0 w-8 h-8 bg-accent rounded-full flex items-center justify-center border-4 border-white shadow-sm">
@@ -61,7 +79,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <p className="font-semibold text-sm">Allergies & Restrictions</p>
-              <p className="text-xs text-muted-foreground truncate">{profile.allergies.join(', ') || 'None'}</p>
+              <p className="text-xs text-muted-foreground truncate">{profile.allergies?.join(', ') || 'None'}</p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
           </div>
@@ -72,18 +90,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <p className="font-semibold text-sm">Health Goals</p>
-              <p className="text-xs text-muted-foreground truncate">{profile.healthGoals.join(', ')}</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-          </div>
-
-          <div className="flex items-center gap-4 p-3 hover:bg-muted/50 transition-colors cursor-pointer group">
-            <div className="w-10 h-10 rounded-xl bg-accent/20 text-accent-foreground flex items-center justify-center">
-              <ChefHatIcon className="w-5 h-5" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">Diet Preferences</p>
-              <p className="text-xs text-muted-foreground truncate">{profile.dietPreferences.join(', ')}</p>
+              <p className="text-xs text-muted-foreground truncate">{profile.healthGoals?.join(', ')}</p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
           </div>
@@ -123,10 +130,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-}
-
-function ChefHatIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><path d="M6 17h12"/></svg>
-  )
 }

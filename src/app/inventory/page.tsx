@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { useAppData } from '@/hooks/use-app-data';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { InventoryItemCard } from '@/components/nutrifridge/inventory-item-card';
 import { Button } from '@/components/ui/button';
@@ -22,17 +21,22 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Filter, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Search, Filter, Loader2 } from 'lucide-react';
 import { InventoryItem, IngredientCategory, StorageLocation } from '@/types/app';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function InventoryPage() {
-  const { inventory, addInventoryItem, loading } = useAppData();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const { toast } = useToast();
 
   const [newItem, setNewItem] = useState<Partial<InventoryItem>>({
     name: '',
@@ -44,35 +48,56 @@ export default function InventoryPage() {
     notes: ''
   });
 
-  if (loading) return null;
+  const inventoryQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'inventory_items');
+  }, [firestore, user]);
 
-  const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filterCategory === 'all' || item.category === filterCategory;
-    return matchesSearch && matchesFilter;
-  }).sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
+  const { data: inventory, isLoading: isInventoryLoading } = useCollection<InventoryItem>(inventoryQuery);
+
+  if (isUserLoading || isInventoryLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const filteredInventory = (inventory || [])
+    .filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+      const matchesFilter = filterCategory === 'all' || item.category === filterCategory;
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
 
   const handleAddItem = async () => {
-    if (!newItem.name) {
+    if (!newItem.name || !user || !firestore) {
       toast({ title: "Name required", variant: "destructive" });
       return;
     }
-    try {
-      await addInventoryItem(newItem as any);
-      setIsAddOpen(false);
-      setNewItem({
-        name: '',
-        category: 'vegetables',
-        quantity: 1,
-        unit: 'pcs',
-        expirationDate: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
-        location: 'fridge',
-        notes: ''
-      });
-      toast({ title: "Item added to inventory" });
-    } catch (e) {
-      toast({ title: "Failed to add item", variant: "destructive" });
-    }
+
+    const colRef = collection(firestore, 'users', user.uid, 'inventory_items');
+    const data = {
+      ...newItem,
+      userId: user.uid,
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    addDocumentNonBlocking(colRef, data);
+    
+    setIsAddOpen(false);
+    setNewItem({
+      name: '',
+      category: 'vegetables',
+      quantity: 1,
+      unit: 'pcs',
+      expirationDate: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      location: 'fridge',
+      notes: ''
+    });
+    toast({ title: "Item added to inventory" });
   };
 
   return (
