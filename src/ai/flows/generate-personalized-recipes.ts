@@ -1,10 +1,10 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for generating personalized, health-aware recipes based on user inventory, preferences, and health conditions.
- *
- * - generatePersonalizedRecipes - A function that handles the personalized recipe generation process.
- * - GeneratePersonalizedRecipesInput - The input type for the generatePersonalizedRecipes function.
- * - GeneratePersonalizedRecipesOutput - The return type for the generatePersonalizedRecipes function.
+ * @fileOverview A Genkit flow for generating personalized recipes.
+ * 
+ * NOTE: This flow uses ai.generate() for single-turn generation. 
+ * For multi-turn interactions or tool-heavy logic, refer to assistant-chat-flow.ts
+ * which uses the stateful ai.chat() session API to prevent metadata loss.
  */
 
 import {ai} from '@/ai/genkit';
@@ -138,6 +138,8 @@ const generatePersonalizedRecipesFlow = ai.defineFlow(
       inventoryItems: sortedInventory, // Use sorted inventory
     };
 
+    // Requirement 3: Use ai.generate() or prompts which correctly handle single turns.
+    // For multi-turn with tool results, use ai.chat() sessions.
     const { output } = await prompt(inputForPrompt);
     return output!;
   }
