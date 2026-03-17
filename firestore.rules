@@ -3,29 +3,34 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * CORE PHILOSOPHY
-     * This ruleset enforces a strict user-ownership model for all personal data, leveraging path-based 
-     * authorization for maximum performance and security. Global resources, such as Recipes, are 
-     * shared among all authenticated users but remain read-only to prevent unauthorized modification.
+     * NutriFridge AI Security Rules
      *
-     * DATA STRUCTURE
-     * - /users/{userId}: The root of all user-specific data (Profiles, Inventory, Shopping Lists, etc.)
-     * - /recipes/{recipeId}: Global collection for shared recipe content.
+     * CORE PHILOSOPHY:
+     * This ruleset implements a strict Path-Based Ownership model for all user-specific data. 
+     * Authorization is derived directly from the document path, ensuring that users can 
+     * only access data nested under their own authenticated UID.
      *
-     * KEY SECURITY DECISIONS
-     * - Path-Based Authorization: We compare the {userId} wildcard in the path directly against 
-     *   the request.auth.uid. This avoids expensive get() calls.
-     * - Relational Integrity: On creation and update of user-owned documents, we verify that 
-     *   internal fields (like 'userId' or 'id') match the path wildcard to ensure data consistency.
-     * - Prototyping Flexibility: We do not enforce strict schema validation (types, required fields) 
-     *   to allow for rapid iteration, focusing exclusively on secure authorization.
-     * - Write Protection: All update and delete operations include an existence check (resource != null)
-     *   to ensure operations are performed on valid, existing documents.
+     * DATA STRUCTURE:
+     * - /user_profiles/{userId}: User metadata and preferences.
+     * - /users/{userId}/{collection}/{id}: User-owned subcollections (Inventory, Saved Recipes, etc.)
+     * - /recipes/{recipeId}: A top-level, public-read collection for curated or AI-generated recipes.
+     *
+     * KEY SECURITY DECISIONS:
+     * 1. Path-based Authorization: By using the {userId} wildcard in the path, we achieve 
+     *    "Authorization Independence," meaning we don't need expensive get() calls to 
+     *    verify ownership.
+     * 2. Prototyping Flexibility: While ownership and relational integrity (matching 
+     *    internal IDs to the path) are strictly enforced, the specific shape and types 
+     *    of content fields remain flexible to allow for rapid UI/Schema iteration.
+     * 3. System-Locked Recipes: The global /recipes collection is readable by any 
+     *    authenticated user but cannot be modified by clients.
+     * 4. Relational Integrity: On document creation, we enforce that any internal 
+     *    'userId' or 'id' field matches the path parameter to ensure data consistency.
      */
 
-    // --- Helper Functions ---
+    // --- HELPER FUNCTIONS ---
 
-    /** @description Checks if the user is authenticated with Firebase Auth. */
+    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
@@ -35,129 +40,113 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Checks if the user is the owner and the document exists. Used for updates and deletes. */
+    /** @description Checks if the user is the owner and the document currently exists. */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
-    /** @description Validates that the userId field in the document data matches the path userId. */
-    function isDataConsistent(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /** @description Specifically for UserProfile where the field is 'id' instead of 'userId'. */
-    function isProfileConsistent(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    // --- Collection Rules ---
+    // --- COLLECTION RULES ---
 
     /**
-     * @description Rules for the UserProfile entity. Users can only manage their own profile.
-     * @path /users/{userId}
-     * @allow (create) User 'abc' creates a document at /users/abc where data.id == 'abc'.
-     * @deny (create) User 'abc' attempts to create /users/xyz.
-     * @principle Path-based ownership with relational integrity check on 'id' field.
+     * @description Rules for the UserProfile entity, which stores core user preferences.
+     * @path /user_profiles/{userId}
+     * @allow (get) If the user's UID matches the profile ID.
+     * @deny (list) Global listing of user profiles is strictly prohibited for privacy.
+     * @principle Path-based ownership and relational integrity for the root profile.
      */
-    match /users/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && isProfileConsistent(userId);
+    match /user_profiles/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Users cannot list other users or even their own profile path; they must 'get' by ID.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
-
-      /**
-       * @description Rules for InventoryItem. Private ingredients tracked by the user.
-       * @path /users/{userId}/inventoryItems/{inventoryItemId}
-       * @allow (list) User 'abc' lists all items in /users/abc/inventoryItems.
-       * @deny (get) User 'abc' tries to read /users/def/inventoryItems/item123.
-       * @principle Restricts access to the owner's specific data sub-tree.
-       */
-      match /inventoryItems/{inventoryItemId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isDataConsistent(userId);
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Rules for ShoppingListItem. Items needed by the user.
-       * @path /users/{userId}/shoppingLists/{shoppingListItemId}
-       * @allow (update) User 'abc' marks an item as bought in their own list.
-       * @deny (create) User 'abc' creates a shopping list item for user 'def'.
-       * @principle Path-based ownership with immutable userId validation.
-       */
-      match /shoppingLists/{shoppingListItemId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isDataConsistent(userId);
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Rules for MealPlanEntry. Planned recipes for a user's calendar.
-       * @path /users/{userId}/mealPlans/{mealPlanEntryId}
-       * @allow (create) User 'abc' adds a meal to their calendar.
-       * @deny (list) User 'abc' tries to view user 'def's meal plan.
-       * @principle Ensures private scheduling data is only accessible by the owner.
-       */
-      match /mealPlans/{mealPlanEntryId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isDataConsistent(userId);
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Rules for Notifications. User-specific alerts and reminders.
-       * @path /users/{userId}/notifications/{notificationId}
-       * @allow (get) User 'abc' reads their own notification.
-       * @deny (update) User 'abc' attempts to mark user 'def's notification as read.
-       * @principle Strict path-based isolation for private user notifications.
-       */
-      match /notifications/{notificationId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isDataConsistent(userId);
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Rules for UserRecipeInteraction. History of views, saves, and ratings.
-       * @path /users/{userId}/recipeInteractions/{userRecipeInteractionId}
-       * @allow (create) User 'abc' saves a recipe interaction to their history.
-       * @deny (delete) User 'abc' tries to delete an interaction from user 'def's history.
-       * @principle Relational integrity ensures interactions are linked to the correct user.
-       */
-      match /recipeInteractions/{userRecipeInteractionId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isDataConsistent(userId);
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
     }
 
     /**
-     * @description Rules for the Recipe entity. Recipes are globally readable by all signed-in users.
+     * @description Rules for system-defined and AI-generated recipes.
      * @path /recipes/{recipeId}
-     * @allow (get) Any authenticated user reads a recipe.
-     * @deny (create) Any user attempts to create a recipe (Writes currently restricted).
-     * @principle Public read access for authenticated users; writes restricted due to missing ownership field in IR.
+     * @allow (get, list) Any authenticated user can read recipes.
+     * @deny (create, update, delete) Clients cannot modify the global recipe catalog.
+     * @principle Public consumption with system-locked writes.
      */
     match /recipes/{recipeId} {
       allow get, list: if isSignedIn();
-      // CRITICAL: Cannot implement owner-only writes. The 'Recipe' entity is missing an 'ownerId' or 'authorId' field.
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false; // System-only or Admin-only writes (not defined in IR for client-side).
+    }
+
+    /**
+     * @description Shared rule logic for user-owned subcollections.
+     * @path /users/{userId}/...
+     * @principle All data under the /users/{userId} path is strictly owned by that specific user.
+     */
+    match /users/{userId} {
+      
+      /**
+       * @description Inventory items (ingredients, fridge contents).
+       * @path /users/{userId}/inventory_items/{itemId}
+       * @allow (create) If userId matches path and internal data.
+       * @deny (update) If trying to change the userId of an existing item.
+       */
+      match /inventory_items/{itemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
 
       /**
-       * @description Rules for RecipeIngredient. Details for ingredients within a recipe.
-       * @path /recipes/{recipeId}/recipeIngredients/{recipeIngredientId}
-       * @allow (list) Any authenticated user lists ingredients for a specific recipe.
-       * @deny (update) Any user attempts to modify an ingredient.
-       * @principle Inherits the read-only posture of the parent Recipe collection.
+       * @description Saved recipes link for a user.
+       * @path /users/{userId}/saved_recipes/{savedId}
        */
-      match /recipeIngredients/{recipeIngredientId} {
-        allow get, list: if isSignedIn();
-        allow create, update, delete: if false;
+      match /saved_recipes/{savedId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User interaction history with recipes.
+       * @path /users/{userId}/recipe_history_entries/{historyId}
+       */
+      match /recipe_history_entries/{historyId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Shopping list items.
+       * @path /users/{userId}/shopping_list_items/{itemId}
+       */
+      match /shopping_list_items/{itemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User-specific meal planning.
+       * @path /users/{userId}/meal_plan_entries/{mealId}
+       */
+      match /meal_plan_entries/{mealId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Notifications directed to the user.
+       * @path /users/{userId}/notifications/{notificationId}
+       */
+      match /notifications/{notificationId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
       }
     }
   }
